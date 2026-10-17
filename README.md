@@ -20,4 +20,4 @@ Serve this folder with a local web server or publish it as a static site, then o
 
 Records are stored separately by each browser on each device. To move them between browsers or devices, download a backup in one and restore it in the other.
 
-The repository publishes the app to GitHub Pages whenever changes are pushed to `main`. If the app link is not available yet, check the **Actions** tab for the Pages deployment to finish.
+The live app is published from the repository’s `gh-pages` branch using GitHub Pages.
