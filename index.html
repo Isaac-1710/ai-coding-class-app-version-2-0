@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f7f1" />
+    <meta name="description" content="A simple, private gradebook for homeschool families." />
+    <title>Little Ledger — Homeschool gradebook</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Little Ledger home">
+          <span class="brand-mark" aria-hidden="true">✳</span>
+          little ledger<span class="brand-period">.</span>
+        </a>
+        <div class="topbar-actions">
+          <span class="local-note"><span class="local-dot" aria-hidden="true"></span> Saved on this device</span>
+          <button class="button button-outline" id="add-student-button" type="button">+ Add student</button>
+        </div>
+      </header>
+
+      <section class="welcome" aria-labelledby="page-title">
+        <p class="eyebrow">A LITTLE RECORD OF LEARNING</p>
+        <h1 id="page-title">Keep the grades. <em>Find them later.</em></h1>
+        <p class="subtitle">A simple place to save schoolwork grades for your homeschool family.</p>
+      </section>
+
+      <p class="status-message" id="status-message" role="status" aria-live="polite"></p>
+
+      <section class="workspace" aria-label="Gradebook">
+        <section class="entry-card" aria-labelledby="entry-title">
+          <div class="card-heading">
+            <span class="heading-icon" aria-hidden="true">+</span>
+            <div>
+              <h2 id="entry-title">Save a grade</h2>
+              <p id="entry-subtitle">Add a schoolwork grade to your records.</p>
+            </div>
+          </div>
+          <div class="first-student" id="first-student" hidden>
+            <p>Add a student before saving grades.</p>
+            <button class="button button-primary" id="first-student-button" type="button">+ Add your first student</button>
+          </div>
+          <form id="grade-form">
+            <div class="field">
+              <label for="grade-student">Student</label>
+              <select id="grade-student" name="student" required></select>
+            </div>
+            <div class="field">
+              <label for="assignment">Assignment or activity</label>
+              <input id="assignment" name="assignment" maxlength="100" placeholder="e.g. Chapter 3 quiz" required />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="grade-subject">Subject</label>
+                <input id="grade-subject" name="subject" list="subject-options" maxlength="40" placeholder="e.g. Math" required />
+                <datalist id="subject-options"></datalist>
+              </div>
+              <div class="field">
+                <label for="grade-date">Date</label>
+                <input id="grade-date" name="date" type="date" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="grade-type">Grade format</label>
+              <select id="grade-type" name="gradeType">
+                <option value="points">Points earned / possible</option>
+                <option value="percent">Percentage</option>
+                <option value="letter">Letter grade or label</option>
+              </select>
+            </div>
+            <div class="score-fields" id="score-fields"></div>
+            <p class="form-error" id="form-error" role="alert"></p>
+            <div class="form-actions">
+              <button class="button button-quiet" id="cancel-edit" type="button" hidden>Cancel edit</button>
+              <button class="button button-primary save-button" id="save-grade-button" type="submit">Save grade</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="records-section" aria-labelledby="records-title">
+          <div class="records-heading">
+            <div>
+              <p class="eyebrow section-eyebrow">YOUR HOMESCHOOL RECORDS</p>
+              <h2 id="records-title">Saved grades <span class="record-count" id="record-count">0</span></h2>
+            </div>
+            <div class="backup-actions">
+              <button class="text-button" id="backup-button" type="button">Download backup</button>
+              <button class="text-button" id="restore-button" type="button">Restore</button>
+              <input id="restore-file" type="file" accept="application/json,.json" hidden />
+            </div>
+          </div>
+
+          <div class="filters" aria-label="Find a saved grade">
+            <div class="search-field">
+              <label class="visually-hidden" for="search-assignment">Search assignment names</label>
+              <span aria-hidden="true">⌕</span>
+              <input id="search-assignment" type="search" placeholder="Find an assignment..." />
+            </div>
+            <div class="filter-row">
+              <div class="filter-field">
+                <label for="filter-student">Student</label>
+                <select id="filter-student"><option value="">All students</option></select>
+              </div>
+              <div class="filter-field">
+                <label for="filter-subject">Subject</label>
+                <select id="filter-subject"><option value="">All subjects</option></select>
+              </div>
+              <div class="filter-field">
+                <label for="filter-from">From</label>
+                <input id="filter-from" type="date" />
+              </div>
+              <div class="filter-field">
+                <label for="filter-to">To</label>
+                <input id="filter-to" type="date" />
+              </div>
+            </div>
+            <p class="filter-summary" id="filter-summary" aria-live="polite"></p>
+          </div>
+
+          <ul class="grade-list" id="grade-list" aria-label="Saved grade entries"></ul>
+          <div class="empty-state" id="empty-state">
+            <span class="empty-icon" aria-hidden="true">✎</span>
+            <h3 id="empty-title">Your grade records start here.</h3>
+            <p id="empty-copy">Save a grade and you’ll be able to find it here whenever you need it.</p>
+          </div>
+        </section>
+      </section>
+
+      <footer class="page-footer">Small steps make wonderful things. <span aria-hidden="true">♡</span></footer>
+    </main>
+
+    <dialog class="modal" id="student-dialog" aria-labelledby="student-dialog-title">
+      <form class="modal-form" id="student-form">
+        <div class="modal-heading">
+          <div>
+            <p class="eyebrow">YOUR HOMESCHOOL</p>
+            <h2 id="student-dialog-title">Add a student</h2>
+          </div>
+          <button class="icon-button" type="button" data-close="student-dialog" aria-label="Close">×</button>
+        </div>
+        <div class="field">
+          <label for="student-name">Student’s name</label>
+          <input id="student-name" name="name" maxlength="50" placeholder="First name" required />
+        </div>
+        <div class="field">
+          <label for="student-grade-level">Grade level</label>
+          <select id="student-grade-level" name="gradeLevel" required>
+            <option value="">Choose a grade</option>
+            <option>Pre-K</option>
+            <option>Kindergarten</option>
+            <option>1st grade</option>
+            <option>2nd grade</option>
+            <option>3rd grade</option>
+            <option>4th grade</option>
+            <option>5th grade</option>
+            <option>6th grade</option>
+            <option>7th grade</option>
+            <option>8th grade</option>
+            <option>9th grade</option>
+            <option>10th grade</option>
+            <option>11th grade</option>
+            <option>12th grade</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-quiet" type="button" data-close="student-dialog">Cancel</button>
+          <button class="button button-primary" type="submit">Add student</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
