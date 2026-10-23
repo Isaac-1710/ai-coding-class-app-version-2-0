@@ -290,6 +290,166 @@ function makeGradeCard(grade) {
   return item;
 }
 
+const LETTER_GRADE_VALUES = new Map([
+  ["A+", 98], ["A", 95], ["A-", 92],
+  ["B+", 88], ["B", 85], ["B-", 82],
+  ["C+", 78], ["C", 75], ["C-", 72],
+  ["D+", 68], ["D", 65], ["D-", 62],
+  ["F", 50]
+]);
+
+const LETTER_GRADE_BANDS = [
+  [97, "A+"], [93, "A"], [90, "A-"],
+  [87, "B+"], [83, "B"], [80, "B-"],
+  [77, "C+"], [73, "C"], [70, "C-"],
+  [67, "D+"], [63, "D"], [60, "D-"],
+  [0, "F"]
+];
+
+function normalizeLetterGrade(letter) {
+  return letter.trim().toLocaleUpperCase().replace(/[–−—]/g, "-").replace(/\s+/g, "");
+}
+
+function formatGradeTotal(value) {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
+}
+
+function renderSubjectAverages() {
+  const selectedStudent = filterStudent.value;
+  const groups = new Map();
+
+  for (const grade of data.grades) {
+    if (selectedStudent && grade.studentId !== selectedStudent) continue;
+
+    const subjectKey = grade.subject.trim().toLocaleLowerCase();
+    const key = `${grade.studentId}\u0000${subjectKey}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        studentId: grade.studentId,
+        subject: grade.subject.trim(),
+        earned: 0,
+        possible: 0,
+        includedCount: 0,
+        allPoints: true,
+        excludedLabels: new Map()
+      };
+      groups.set(key, group);
+    }
+
+    if (grade.gradeType === "points") {
+      group.earned += grade.earned;
+      group.possible += grade.possible;
+      group.includedCount += 1;
+    } else if (grade.gradeType === "percent") {
+      group.earned += grade.percentage;
+      group.possible += 100;
+      group.includedCount += 1;
+      group.allPoints = false;
+    } else {
+      group.allPoints = false;
+      const letter = normalizeLetterGrade(grade.letter);
+      const convertedValue = LETTER_GRADE_VALUES.get(letter);
+      if (convertedValue !== undefined) {
+        group.earned += convertedValue;
+        group.possible += 100;
+        group.includedCount += 1;
+      } else {
+        const existing = group.excludedLabels.get(grade.letter.trim());
+        if (existing) existing.count += 1;
+        else group.excludedLabels.set(grade.letter.trim(), { label: grade.letter.trim(), count: 1 });
+      }
+    }
+  }
+
+  const container = document.querySelector("#average-groups");
+  const studentsById = new Map(data.students.map(student => [student.id, student]));
+  const sortedGroups = [...groups.values()].sort((a, b) => {
+    const studentA = studentsById.get(a.studentId)?.name ?? "";
+    const studentB = studentsById.get(b.studentId)?.name ?? "";
+    return studentA.localeCompare(studentB) || a.subject.localeCompare(b.subject);
+  });
+  const content = [];
+  let currentStudentId = "";
+
+  for (const group of sortedGroups) {
+    const student = studentsById.get(group.studentId);
+    if (!student) continue;
+
+    if (!selectedStudent && currentStudentId !== group.studentId) {
+      currentStudentId = group.studentId;
+      const heading = document.createElement("h4");
+      heading.className = "average-student-heading";
+      heading.textContent = student.gradeLevel
+        ? `${student.name} · ${student.gradeLevel}`
+        : student.name;
+      content.push(heading);
+    }
+
+    const card = document.createElement("article");
+    card.className = "average-card";
+    const top = document.createElement("div");
+    top.className = "average-card-top";
+    const subject = document.createElement("h4");
+    subject.className = "average-subject";
+    subject.textContent = group.subject;
+    top.append(subject);
+
+    if (group.includedCount > 0) {
+      const percentage = group.earned / group.possible * 100;
+      const letterGrade = LETTER_GRADE_BANDS.find(([minimum]) => percentage >= minimum)?.[1] ?? "F";
+      const gradeMark = document.createElement("span");
+      gradeMark.className = "average-letter";
+      gradeMark.textContent = letterGrade;
+      gradeMark.setAttribute("aria-label", `Average grade ${letterGrade}`);
+      top.append(gradeMark);
+
+      const percentText = document.createElement("p");
+      percentText.className = "average-percentage";
+      percentText.textContent = `${percentage.toFixed(1)}% average`;
+      const totalText = document.createElement("p");
+      totalText.className = "average-total";
+      totalText.textContent = group.allPoints
+        ? `${formatGradeTotal(group.earned)} / ${formatGradeTotal(group.possible)} points`
+        : `Normalized total: ${formatGradeTotal(group.earned)} / ${formatGradeTotal(group.possible)}`;
+      const countText = document.createElement("p");
+      countText.className = "average-count";
+      countText.textContent = `${group.includedCount} ${group.includedCount === 1 ? "grade" : "grades"} included`;
+      card.append(top, percentText, totalText, countText);
+    } else {
+      const noAverage = document.createElement("p");
+      noAverage.className = "average-no-grade";
+      noAverage.textContent = "No average yet — no grades on the selected scale.";
+      card.append(top, noAverage);
+    }
+
+    if (group.excludedLabels.size > 0) {
+      const labelsText = document.createElement("p");
+      labelsText.className = "average-excluded";
+      const labels = [...group.excludedLabels.values()]
+        .map(({ label, count }) => `${label} (${count})`)
+        .join(", ");
+      const excludedCount = [...group.excludedLabels.values()]
+        .reduce((sum, item) => sum + item.count, 0);
+      labelsText.textContent = `${excludedCount} not included: ${labels}`;
+      card.append(labelsText);
+    }
+
+    content.push(card);
+  }
+
+  if (content.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "averages-empty";
+    empty.textContent = selectedStudent
+      ? "Save a grade to see subject averages for this student."
+      : "Save a grade to see subject averages here.";
+    content.push(empty);
+  }
+
+  container.replaceChildren(...content);
+}
+
 function renderGrades() {
   const query = searchInput.value.trim().toLocaleLowerCase();
   const from = filterFrom.value;
@@ -324,6 +484,7 @@ function renderGrades() {
     emptyTitle.textContent = "No grades match those filters.";
     emptyCopy.textContent = "Try a different student, subject, date range, or assignment name.";
   }
+  renderSubjectAverages();
 }
 
 function render() {
