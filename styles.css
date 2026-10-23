@@ -99,6 +99,25 @@ h1 em { color: #729078; font-weight: 500; }
 .filter-field label { margin-bottom: 4px; color: #889188; font-size: 8px; }
 .filter-field input, .filter-field select { min-height: 31px; padding: 0 6px; font-size: 9px; }
 .filter-summary { margin: 8px 0 0; color: #929b91; font-size: 9px; }
+.subject-averages { margin: 13px 0 12px; padding: 13px; border: 1px solid #e7ebe3; border-radius: 9px; background: #f8faf6; }
+.averages-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+.averages-heading .section-eyebrow { margin-bottom: 3px; }
+.averages-heading h3 { margin: 0; color: #34483a; font-family: Georgia, serif; font-size: 15px; font-weight: 500; }
+.averages-note { color: #929b91; font-size: 8px; }
+.grade-scale-note { margin: -4px 0 9px; color: #899287; font-size: 8px; }
+.grade-scale-note summary { width: fit-content; color: #68836c; cursor: pointer; }
+.grade-scale-note p { margin: 5px 0 0; line-height: 1.5; }
+.average-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.average-student-heading { grid-column: 1 / -1; margin: 3px 0 0; color: #748174; font-size: 9px; font-weight: 600; }
+.average-card { min-width: 0; padding: 10px; border: 1px solid #e9ede6; border-radius: 8px; background: #fff; }
+.average-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.average-subject { overflow: hidden; margin: 0; color: #46594a; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.average-letter { display: grid; min-width: 29px; height: 29px; place-items: center; border-radius: 9px; color: #426e4d; background: #edf3e9; font-family: Georgia, serif; font-size: 14px; font-weight: 600; }
+.average-percentage { margin: 7px 0 3px; color: #405a45; font-size: 12px; font-weight: 600; }
+.average-total, .average-count, .average-excluded, .average-no-grade, .averages-empty { margin: 3px 0 0; color: #899287; font-size: 8px; line-height: 1.5; overflow-wrap: anywhere; }
+.average-excluded { margin-top: 7px; padding-top: 6px; border-top: 1px solid #eff1ed; color: #8d7864; }
+.average-no-grade { margin-top: 7px; }
+.averages-empty { margin: 0; }
 .grade-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
 .grade-card { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 11px 10px; border: 1px solid #eceee8; border-radius: 9px; background: #fff; animation: arrive .18s ease-out; }
 @keyframes arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
