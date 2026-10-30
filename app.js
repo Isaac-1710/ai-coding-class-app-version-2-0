@@ -17,6 +17,9 @@ const studentDialog = document.querySelector("#student-dialog");
 const studentForm = document.querySelector("#student-form");
 const studentNameInput = document.querySelector("#student-name");
 const studentGradeLevel = document.querySelector("#student-grade-level");
+const studentDialogTitle = document.querySelector("#student-dialog-title");
+const studentSubmitButton = document.querySelector("#student-submit-button");
+const editStudentButton = document.querySelector("#edit-student-button");
 const statusMessage = document.querySelector("#status-message");
 const gradeList = document.querySelector("#grade-list");
 const emptyState = document.querySelector("#empty-state");
@@ -34,6 +37,7 @@ const restoreFile = document.querySelector("#restore-file");
 let data = { version: BACKUP_VERSION, students: [], grades: [] };
 let selectedStudentId = "";
 let editingGradeId = "";
+let editingStudentId = "";
 let storageAvailable = true;
 
 function makeId() {
@@ -164,6 +168,7 @@ function renderStudentControls() {
   updateSubjectOptions();
   firstStudent.hidden = data.students.length > 0;
   gradeForm.hidden = data.students.length === 0;
+  editStudentButton.disabled = !gradeStudent.value;
   document.querySelector("#add-student-button").disabled = false;
   document.querySelector("#backup-button").disabled = data.students.length === 0;
 }
@@ -585,12 +590,54 @@ function submitGrade(event) {
   if (storageAvailable) setStatus(isEditing ? "Grade updated." : "Grade saved.");
 }
 
-function addStudent(event) {
+function openStudentDialog(studentId = "") {
+  studentForm.reset();
+  studentNameInput.setCustomValidity("");
+  editingStudentId = studentId;
+
+  const student = data.students.find((item) => item.id === studentId);
+  if (studentId && !student) {
+    editingStudentId = "";
+    setStatus("This student could not be found. Refresh the page and try again.", true);
+    return;
+  }
+
+  studentDialogTitle.textContent = student ? "Edit student" : "Add a student";
+  studentSubmitButton.textContent = student ? "Save changes" : "Add student";
+  if (student) {
+    studentNameInput.value = student.name;
+    studentGradeLevel.value = student.gradeLevel;
+  }
+  studentDialog.showModal();
+  studentNameInput.focus();
+}
+
+function submitStudent(event) {
   event.preventDefault();
   if (!studentForm.reportValidity()) return;
   const name = studentNameInput.value.trim();
   const gradeLevel = studentGradeLevel.value;
-  if (!name || !gradeLevel) return;
+  if (!name) {
+    studentNameInput.setCustomValidity("Enter the student's name.");
+    studentNameInput.reportValidity();
+    return;
+  }
+
+  if (editingStudentId) {
+    const student = data.students.find((item) => item.id === editingStudentId);
+    if (!student) {
+      setStatus("This student could not be found. Refresh the page and try again.", true);
+      return;
+    }
+
+    student.name = name;
+    student.gradeLevel = gradeLevel;
+    saveData();
+    studentDialog.close();
+    render();
+    if (storageAvailable) setStatus(`${student.name}'s details updated.`);
+    return;
+  }
 
   const student = { id: makeId(), name, gradeLevel, subjects: [] };
   data.students.push(student);
@@ -665,9 +712,11 @@ async function restoreBackup(file) {
   }
 }
 
-document.querySelector("#add-student-button").addEventListener("click", () => studentDialog.showModal());
-document.querySelector("#first-student-button").addEventListener("click", () => studentDialog.showModal());
-studentForm.addEventListener("submit", addStudent);
+document.querySelector("#add-student-button").addEventListener("click", () => openStudentDialog());
+document.querySelector("#first-student-button").addEventListener("click", () => openStudentDialog());
+editStudentButton.addEventListener("click", () => openStudentDialog(gradeStudent.value));
+studentNameInput.addEventListener("input", () => studentNameInput.setCustomValidity(""));
+studentForm.addEventListener("submit", submitStudent);
 gradeForm.addEventListener("submit", submitGrade);
 gradeType.addEventListener("change", () => renderScoreFields());
 gradeStudent.addEventListener("change", () => {
@@ -691,6 +740,11 @@ document.querySelectorAll("[data-close]").forEach((button) => {
   button.addEventListener("click", () => document.getElementById(button.dataset.close).close());
 });
 studentDialog.addEventListener("close", () => {
+  editingStudentId = "";
+  studentForm.reset();
+  studentNameInput.setCustomValidity("");
+  studentDialogTitle.textContent = "Add a student";
+  studentSubmitButton.textContent = "Add student";
   if (data.students.length) assignmentInput.focus();
   else document.querySelector("#add-student-button").focus();
 });
