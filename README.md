@@ -4,7 +4,7 @@
 
 Little Ledger helps homeschool parents keep students’ grades together and find them later. Its main use is simple: select a student, save a grade, then search or filter the records when quarterly paperwork is due.
 
-**One change I made:** I first explored an assignment planner, then changed the idea to a gradebook when it became clear that saving and finding grades would help families more.
+**One change I made:** I first though to make a homeschool curriculum, then changed the idea to a gradebook when it became clear that saving and finding grades would help families more.
 
 ## How it works
 
